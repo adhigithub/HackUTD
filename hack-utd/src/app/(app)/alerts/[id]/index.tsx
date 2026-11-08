@@ -185,7 +185,7 @@ function AISummary({ alert }: { alert: Alert }) {
   return (
     <View style={styles.ai}>
       <ThemedText type="small" themeColor="textSecondary">
-        {result === null ? '✦ AI is reading the data…' : result.source === 'ai' ? '✦ AI summary' : 'Summary'}
+        {result === null ? '✦ AI Overview' : result.source === 'ai' ? '✦ AI summary' : 'Summary'}
       </ThemedText>
       <ThemedText type="small">{result?.text ?? alert.explanation}</ThemedText>
     </View>

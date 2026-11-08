@@ -1,5 +1,5 @@
 import type { Role } from '@/lib/auth/types';
-import type { ReportPeriod } from '@/lib/portfolio/report';
+import type { LiveReportEntries, ReportPeriod } from '@/lib/portfolio/report';
 
 import { offlineAnswer } from './offline-answer';
 import { ASK_LIMITS, type AskErrorResponse, type AskResponse, type AskTurn, type ChatRole } from './types';
@@ -24,7 +24,9 @@ const TIMEOUT_MS = 60_000;
 export async function ask(
   history: ChatMessage[],
   role: Role,
-  period: ReportPeriod
+  period: ReportPeriod,
+  /** Live fixes / open alerts from the app, so answers match the Report tab. */
+  live: LiveReportEntries = {}
 ): Promise<Pick<ChatMessage, 'text' | 'source' | 'note'>> {
   const turns = toTurns(history);
   const question = turns[turns.length - 1]?.content ?? '';
@@ -35,7 +37,7 @@ export async function ask(
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: turns, role, period }),
+      body: JSON.stringify({ messages: turns, role, period, live }),
       signal: controller.signal,
     });
     const data = (await res.json().catch(() => null)) as AskResponse | AskErrorResponse | null;
@@ -47,7 +49,7 @@ export async function ask(
       return { text: data.error, source: 'ai' };
     }
     return {
-      text: offlineAnswer(question, period),
+      text: offlineAnswer(question, period, live),
       source: 'offline',
       note:
         data && 'code' in data && data.code === 'not_configured'
@@ -56,7 +58,7 @@ export async function ask(
     };
   } catch {
     return {
-      text: offlineAnswer(question, period),
+      text: offlineAnswer(question, period, live),
       source: 'offline',
       note: 'Couldn’t reach the AI, so this is a quick answer from the report.',
     };

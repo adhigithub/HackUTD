@@ -1,6 +1,11 @@
 import { BUILDINGS, IMPACT_PROFILES } from '@/lib/portfolio/demo-data';
 import { formatShortDate, formatUSD, plural } from '@/lib/portfolio/format';
-import { buildReport, buildingName, type ReportPeriod } from '@/lib/portfolio/report';
+import {
+  buildReport,
+  buildingName,
+  type LiveReportEntries,
+  type ReportPeriod,
+} from '@/lib/portfolio/report';
 import { BUILDING_TYPE_LABELS, CATEGORY_LABELS } from '@/lib/portfolio/types';
 
 /**
@@ -8,9 +13,13 @@ import { BUILDING_TYPE_LABELS, CATEGORY_LABELS } from '@/lib/portfolio/types';
  * reached, so the demo still answers the common questions. It's a keyword
  * matcher, not a model, and the UI labels these replies as offline.
  */
-export function offlineAnswer(question: string, period: ReportPeriod = 30): string {
+export function offlineAnswer(
+  question: string,
+  period: ReportPeriod = 30,
+  live: LiveReportEntries = {}
+): string {
   const q = question.toLowerCase();
-  const r = buildReport(period);
+  const r = buildReport(period, new Date(), live);
   const range = `${formatShortDate(r.startISO)} – ${formatShortDate(r.endISO)}`;
   const has = (...words: string[]) => words.some((w) => q.includes(w));
 
