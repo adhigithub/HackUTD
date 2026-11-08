@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useLiveReportEntries } from '@/features/alerts/report-bridge';
 import { useAuth } from '@/lib/auth/auth-context';
 import { can } from '@/lib/auth/types';
 import { formatShortDate, formatUSD, formatUSDCompact, plural } from '@/lib/portfolio/format';
@@ -48,7 +49,9 @@ export default function ReportScreen() {
   const [showHow, setShowHow] = useState(true);
   const [showAllIncidents, setShowAllIncidents] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
-  const report = useMemo(() => buildReport(period), [period]);
+  // Fixes approved in the app (and overnight auto-fixes) show up here right away.
+  const live = useLiveReportEntries();
+  const report = useMemo(() => buildReport(period, new Date(), live), [period, live]);
 
   if (!user) return null;
 

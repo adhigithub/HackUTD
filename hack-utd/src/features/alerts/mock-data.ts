@@ -3,7 +3,7 @@
  * sensors, badge system, maintenance records, leases and weather feed.
  * All $ values are illustrative demo assumptions, not real figures.
  */
-import type { HvacState, PanelSigns, Reading } from './engine';
+import type { PanelSigns } from './engine';
 import type { Building, DominoDef, FixDef, Signal } from './types';
 
 export const BUILDINGS: Building[] = [
@@ -16,9 +16,12 @@ export function getBuilding(id: string) {
   return BUILDINGS.find((b) => b.id === id);
 }
 
-/** Readings every 10 minutes for the last hour (minute 0 = now). */
-const lastHour = (values: number[]): Reading[] =>
-  values.map((value, i) => ({ minute: (i - (values.length - 1)) * 10, value }));
+/**
+ * Each scenario names the equipment + metric it watches in the `readings`
+ * table (Supabase). Whether the alert exists is decided by those readings;
+ * the step chains, costs and fixes below are fixed demo values.
+ */
+export type Sensor = { assetId: string; metric: string };
 
 // ─── Scenario 3: Server Room 2 slowly overheating (Dallas DC-2) ─────────────
 
@@ -28,8 +31,10 @@ export const serverRoomOverheat = {
   title: 'Server Room 2 is slowly overheating',
   asset: 'Cooling Unit 2',
   location: 'Server Room 2',
-  readings: lastHour([72, 73, 74, 75, 76, 77, 78]),
+  sensor: { assetId: 'room2', metric: 'temp_f' } satisfies Sensor,
   limitF: 90,
+  /** Alert when the trend hits the limit within this many minutes. */
+  horizonMin: 360,
   signals: [
     { source: 'temp', reading: 'Server Room 2 is 78°F and getting 1°F hotter every 10 minutes' },
     { source: 'bms', reading: 'Cooling Unit 2 is running 40% longer than normal just to keep up' },
@@ -116,21 +121,27 @@ export const serverRoomOverheat = {
 
 // ─── Scenario 2: power panel failure signs (same problem, two buildings) ────
 
-const panelSigns: PanelSigns = {
-  dipsOver5PctLast24h: 3,
-  tempAboveNormal: true,
+/**
+ * Warning signs that come from records, not live sensors (repair history and
+ * the weather feed). The live ones (voltage dips, panel temperature) are read
+ * from the `readings` table at scan time.
+ */
+export const panelRecordSigns: Pick<PanelSigns, 'inspectionOverdue' | 'stormForecast'> = {
   inspectionOverdue: true,
   stormForecast: true,
 };
 
+/** A panel counts as running hot at or above this temperature. */
+export const PANEL_HOT_F = 120;
+
 export const panelFailures = [
   {
     id: 'dc2-panel-b',
+    assetId: 'panel-b',
     buildingId: 'dallas-dc-2',
     title: 'Panel B is showing failure signs',
     asset: 'Power Panel B',
     location: 'Electrical Room 1',
-    signs: panelSigns,
     signals: [
       { source: 'panel', reading: 'Panel B’s power dipped 3 times today and it’s running hot (140°F)' },
       { source: 'maintenance', reading: 'Panel B hasn’t been inspected in 2 years' },
@@ -204,11 +215,11 @@ export const panelFailures = [
   },
   {
     id: 'galleria-panel-3',
+    assetId: 'panel-3',
     buildingId: 'galleria-mall',
     title: 'Panel 3 is showing failure signs',
     asset: 'Power Panel 3',
     location: 'the East Wing',
-    signs: panelSigns,
     signals: [
       { source: 'panel', reading: 'Panel 3’s power dipped 3 times today and it’s running hot (140°F)' },
       { source: 'maintenance', reading: 'Panel 3 hasn’t been inspected in 2 years' },
@@ -279,8 +290,9 @@ export const freezerDrift = {
   title: 'Food court freezer F-2 is warming',
   asset: 'Freezer F-2',
   location: 'the Food Court',
-  readings: lastHour([1.0, 1.3, 1.6, 1.9, 2.2, 2.5, 2.8]),
+  sensor: { assetId: 'freezer-f2', metric: 'temp_f' } satisfies Sensor,
   limitF: 10,
+  horizonMin: 480,
   signals: [
     { source: 'temp', reading: 'Freezer F-2 is 2.8°F and warming 0.3°F every 10 minutes' },
     { source: 'maintenance', reading: 'F-2’s door seal was flagged as worn at its last check' },
@@ -347,20 +359,22 @@ export const emptyFloorHvac = {
   id: 'tower-one-floor-4-hvac',
   buildingId: 'tower-one',
   floor: 'Floor 4',
-  at: '11:42 PM',
-  state: {
-    hvacOn: true,
-    occupants: 0,
-    outsideLeaseHours: true,
-    minutesInState: 284, // since the last badge swipe at 6:58 PM
-    kW: 85,
-    hoursUntilOpen: 7,
-    pricePerKWh: 0.12,
-  } satisfies HvacState,
-  signals: [
-    { source: 'bms', reading: 'Floor 4 air conditioning is on, cooling to 68°F at 11:42 PM' },
-    { source: 'occupancy', reading: 'Last person left at 6:58 PM; no phones or laptops on Wi-Fi' },
+  assetId: 'f4-ac',
+  /** Power (kW) counts as "AC running hard" at 2× its usual level, and at least this much. */
+  minOnKw: 25,
+  /** Demo assumptions: it's after the tenant's hours, and they open in 7 h. */
+  outsideLeaseHours: true,
+  hoursUntilOpen: 7,
+  pricePerKWh: 0.12,
+  /** Readings that don't come from sensors (contract terms). */
+  recordSignals: [
     { source: 'lease', reading: 'The tenant’s office hours are 9 AM–6 PM' },
-    { source: 'meter', reading: 'Floor 4 is using 85 kW of power' },
   ] satisfies Signal[],
 };
+
+/** Every alert scenario, by id (used to describe fixes in the Client Report). */
+export const SCENARIOS = [serverRoomOverheat, ...panelFailures, freezerDrift];
+
+export function getScenario(id: string) {
+  return SCENARIOS.find((s) => s.id === id);
+}

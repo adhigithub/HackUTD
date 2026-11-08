@@ -67,9 +67,14 @@ export type HvacState = {
   pricePerKWh: number;
 };
 
-/** Scenario 1: HVAC on + nobody there + after hours + > 30 min → waste. */
-export function detectHvacWaste(s: HvacState) {
-  const isWaste = s.hvacOn && s.occupants === 0 && s.outsideLeaseHours && s.minutesInState > 30;
+/**
+ * Scenario 1: HVAC on + nobody there + after hours + on for a while → waste.
+ * `confirmMinutes` is how long it must stay that way (spec: 30). The live demo
+ * passes 0 so a single edited reading triggers it.
+ */
+export function detectHvacWaste(s: HvacState, confirmMinutes = 30) {
+  const isWaste =
+    s.hvacOn && s.occupants === 0 && s.outsideLeaseHours && s.minutesInState >= confirmMinutes;
   const costPerNight = s.kW * s.hoursUntilOpen * s.pricePerKWh;
   return { isWaste, costPerNight, costPerYear: costPerNight * 365 };
 }
