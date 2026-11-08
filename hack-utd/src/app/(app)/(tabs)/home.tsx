@@ -9,7 +9,7 @@ import { Screen } from '@/components/ui/screen';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAlerts } from '@/features/alerts/alerts-context';
-import { formatUSD } from '@/features/alerts/format';
+import { formatClock, formatUSD } from '@/features/alerts/format';
 import { useAuth } from '@/lib/auth/auth-context';
 import { can } from '@/lib/auth/types';
 
@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const {
     status,
     scannedAt,
+    dataSource,
     alerts,
     openAlerts,
     resolutions,
@@ -69,6 +70,13 @@ export default function HomeScreen() {
       {/* Alerts, biggest $ first */}
       <View style={styles.section}>
         <ThemedText type="subtitle">Needs attention</ThemedText>
+        {scannedAt !== null && (
+          <ThemedText type="small" themeColor={dataSource === 'live' ? 'success' : 'textSecondary'}>
+            {dataSource === 'live'
+              ? `● Live building data · updated ${formatClock(scannedAt)}`
+              : 'Demo data (live backend not connected)'}
+          </ThemedText>
+        )}
         {firstLoad ? (
           <ActivityIndicator style={styles.loading} />
         ) : openAlerts.length === 0 ? (

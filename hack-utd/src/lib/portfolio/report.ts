@@ -15,6 +15,7 @@ import {
   type Building,
   type IssueCategory,
   type ResolvedIncident,
+  type WasteNight,
 } from './types';
 
 /**
@@ -69,17 +70,26 @@ export type ReportSummary = {
   moneyAtRisk: number;
 };
 
-export function buildReport(periodDays: ReportPeriod, now = new Date()): ReportSummary {
+/** Extra entries from the live alerts system (fixes approved in the app, overnight auto-fixes). */
+export type LiveReportEntries = { incidents?: ResolvedIncident[]; wasteNights?: WasteNight[] };
+
+export function buildReport(
+  periodDays: ReportPeriod,
+  now = new Date(),
+  live: LiveReportEntries = {}
+): ReportSummary {
   const start = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
   const inPeriod = (iso: string) => {
     const t = new Date(iso).getTime();
     return t >= start.getTime() && t <= now.getTime();
   };
 
-  const incidents = buildIncidents(now)
+  const incidents = [...buildIncidents(now), ...(live.incidents ?? [])]
     .filter((i) => inPeriod(i.occurredAt))
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
-  const waste = buildWasteNights(now, periodDays).filter((w) => inPeriod(w.date));
+  const waste = [...buildWasteNights(now, periodDays), ...(live.wasteNights ?? [])].filter((w) =>
+    inPeriod(w.date)
+  );
 
   const incidentSavings = sum(incidents.map((i) => i.costAvoided));
   const wasteSaved = round2(sum(waste.map((w) => w.costSaved)));
