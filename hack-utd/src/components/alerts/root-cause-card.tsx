@@ -43,12 +43,12 @@ export function RootCauseCard({ group }: { group: RootCauseGroup }) {
               </View>
             </View>
           ))}
-          {bestFix && protectedByRootFix > 0 && (
+          {/* {bestFix && protectedByRootFix > 0 && (
             <ThemedText type="small" themeColor="success">
               Fix this first: “{bestFix.title}” also protects{' '}
               {protectedByRootFix === 1 ? 'the problem' : `all ${protectedByRootFix} problems`} below.
             </ThemedText>
-          )}
+          )} */}
         </View>
       )}
     </Card>
