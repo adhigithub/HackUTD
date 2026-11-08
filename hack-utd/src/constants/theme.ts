@@ -23,23 +23,27 @@ export const Colors = {
     warningSoft: '#FEF4E2',
     success: '#16835A',
     successSoft: '#E5F5EE',
+    gridLine: 'rgba(26, 95, 208, 0.08)',
+    gridLineMajor: 'rgba(26, 95, 208, 0.16)',
   },
   dark: {
     text: '#EAF1FB',
-    background: '#08111E',
-    backgroundElement: '#111D2E',
-    backgroundSelected: '#1B2B42',
+    background: '#11264c',
+    backgroundElement: '#233248',
+    backgroundSelected: '#3769b0',
     textSecondary: '#93A3B8',
-    border: '#22344D',
-    primary: '#4C8DF6',
+    border: '#fafafa56',
+    primary: 'm#95c910',
     primaryText: '#FFFFFF',
-    primarySoft: '#14284A',
+    primarySoft: '#18376c',
     danger: '#F26464',
     dangerSoft: '#3A1719',
     warning: '#F0B34A',
     warningSoft: '#3A2A10',
     success: '#3CCB8E',
     successSoft: '#0F3226',
+    gridLine: 'rgba(255, 255, 255, 0.07)',
+    gridLineMajor: 'rgba(255, 255, 255, 0.16)',
   },
 } as const;
 
@@ -78,8 +82,8 @@ export const Spacing = {
 
 export const Radius = {
   sm: 8,
-  md: 12,
-  lg: 18,
+  md: 4,
+  lg: 5,
   pill: 999,
 } as const;
 

@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ErrorBanner } from '@/components/ui/error-banner';
+import { Logo } from '@/components/ui/logo';
 import { Screen } from '@/components/ui/screen';
 import { TextField, type TextFieldHandle } from '@/components/ui/text-field';
 import { Radius, Spacing } from '@/constants/theme';
@@ -38,8 +39,8 @@ export default function SignInScreen() {
   return (
     <Screen edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.brand}>
-        <View style={[styles.logo, { backgroundColor: theme.primary }]}>
-          <ThemedText style={[styles.logoText, { color: theme.primaryText }]}>B</ThemedText>
+        <View style={[styles.logo, { borderColor: theme.border }]}>
+          <Logo size={60} color="#003891" background="#95c910" />
         </View>
         <ThemedText type="title">BluePrint</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.center}>
@@ -116,13 +117,14 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   brand: { alignItems: 'center', gap: Spacing.two, marginTop: Spacing.five },
   logo: {
-    width: 64,
-    height: 64,
+    width: 80,
+    height: 80,
     borderRadius: Radius.lg,
+    borderWidth: 1,
+    backgroundColor: '#95c910',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoText: { fontSize: 32, lineHeight: 38, fontWeight: 800 },
   center: { textAlign: 'center' },
   form: { gap: Spacing.three, padding: Spacing.four },
   demo: { gap: Spacing.two },

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
+import { GridBackground } from '@/components/ui/grid-background';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -23,6 +24,8 @@ export function Screen({ children, edges = ['top', 'left', 'right'], refreshCont
   const theme = useTheme();
   return (
     <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: theme.background }]}>
+      <GridBackground />
+      <GridBackground />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
