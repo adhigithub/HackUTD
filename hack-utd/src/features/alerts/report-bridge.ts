@@ -5,9 +5,11 @@
  */
 import { useMemo } from 'react';
 
-import type { ResolvedIncident, WasteNight } from '@/lib/portfolio/types';
+import type { LiveReportEntries } from '@/lib/portfolio/report';
+import type { ActiveAlert, ResolvedIncident, WasteNight } from '@/lib/portfolio/types';
 
 import { useAlerts } from './alerts-context';
+import { formatMinutes } from './format';
 import { emptyFloorHvac, getScenario } from './mock-data';
 import { SOURCE_LABELS, type Alert, type AlertKind, type FixMode, type Resolution } from './types';
 
@@ -58,9 +60,25 @@ function toIncident(r: Resolution, alert: Alert | undefined): ResolvedIncident |
   };
 }
 
-/** Live entries to add to the Client Report (newest data from the alerts system). */
-export function useLiveReportEntries(): { incidents: ResolvedIncident[]; wasteNights: WasteNight[] } {
-  const { fixHistory, alerts, autoFixes } = useAlerts();
+/** An open alert, in the Client Report's "still at risk" format. */
+function toActiveAlert(a: Alert): ActiveAlert {
+  const best = a.fixes.find((f) => f.feasible);
+  return {
+    id: a.id,
+    buildingId: a.buildingId,
+    category: CATEGORY[a.kind],
+    severity: a.severity,
+    title: a.title,
+    detail: `${a.asset} in ${a.location} will break down in about ${formatMinutes(a.chain[0].fallAtMin)}.`,
+    moneyAtRisk: a.costAtRisk,
+    eta: `in about ${formatMinutes(a.chain[0].fallAtMin)}`,
+    recommendedFix: best?.title ?? 'Call the on-site team now',
+  };
+}
+
+/** Live entries for the Client Report and Ask AI (newest data from the alerts system). */
+export function useLiveReportEntries(): Required<LiveReportEntries> {
+  const { fixHistory, alerts, openAlerts, autoFixes } = useAlerts();
 
   return useMemo(() => {
     const incidents = fixHistory
@@ -77,6 +95,6 @@ export function useLiveReportEntries(): { incidents: ResolvedIncident[]; wasteNi
         costSaved: Math.round(f.savedPerNight * 100) / 100,
       }));
 
-    return { incidents, wasteNights };
-  }, [fixHistory, alerts, autoFixes]);
+    return { incidents, wasteNights, activeAlerts: openAlerts.map(toActiveAlert) };
+  }, [fixHistory, alerts, openAlerts, autoFixes]);
 }
