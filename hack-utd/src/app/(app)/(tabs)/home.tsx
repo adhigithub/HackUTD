@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
-import { Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAlerts } from '@/features/alerts/alerts-context';
 import { formatClock, formatUSD } from '@/features/alerts/format';
@@ -109,7 +109,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   greeting: { marginTop: Spacing.two },
   hero: { padding: Spacing.four, gap: Spacing.one },
-  heroValue: { fontSize: 40, lineHeight: 48, fontWeight: 800 },
+  heroValue: { fontFamily: Fonts.heading, fontSize: 40, lineHeight: 50 },
   heroLoading: { alignSelf: 'flex-start', marginVertical: Spacing.three },
   section: { gap: Spacing.three },
   loading: { padding: Spacing.four },
