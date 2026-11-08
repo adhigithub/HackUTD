@@ -67,7 +67,7 @@ export default function SignInScreen() {
           label="Password"
           value={password}
           onChangeText={setPassword}
-          placeholder="••••••••"
+          placeholder="Enter password here"
           secureTextEntry
           autoComplete="password"
           textContentType="password"

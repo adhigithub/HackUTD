@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
@@ -27,41 +28,49 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Sign-in is one-time use: the session lives only in memory, never in storage,
+  // so every fresh launch of the app starts signed out on the sign-in page.
+  const userIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
         await store.seedDemoUsers();
-        const id = await store.loadSessionUserId();
-        if (id) setUser(await store.getUser(id));
+        // Older builds saved the session to the device; wipe it so it can't linger.
+        await store.clearSession();
       } finally {
         setIsLoading(false);
       }
     })();
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const u = await store.verifyCredentials(email, password);
-    await store.saveSession(u.id);
+  const setSession = useCallback((u: User | null) => {
+    userIdRef.current = u?.id ?? null;
     setUser(u);
   }, []);
 
-  const signUp = useCallback(async (input: store.NewUserInput) => {
-    const u = await store.createUser(input);
-    await store.saveSession(u.id);
-    setUser(u);
-  }, []);
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      setSession(await store.verifyCredentials(email, password));
+    },
+    [setSession]
+  );
+
+  const signUp = useCallback(
+    async (input: store.NewUserInput) => {
+      setSession(await store.createUser(input));
+    },
+    [setSession]
+  );
 
   const signOut = useCallback(async () => {
-    await store.clearSession();
-    setUser(null);
-  }, []);
+    setSession(null);
+  }, [setSession]);
 
   const refreshUser = useCallback(async () => {
-    const id = await store.loadSessionUserId();
-    const u = id ? await store.getUser(id) : null;
-    if (!u) await store.clearSession();
-    setUser(u);
-  }, []);
+    const id = userIdRef.current;
+    setSession(id ? await store.getUser(id) : null);
+  }, [setSession]);
 
   const value = useMemo(
     () => ({ user, isLoading, signIn, signUp, signOut, refreshUser }),
