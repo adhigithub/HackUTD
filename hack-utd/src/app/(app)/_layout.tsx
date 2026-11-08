@@ -1,20 +1,39 @@
 import { Stack } from 'expo-router';
 
+import { useTheme } from '@/hooks/use-theme';
+import { AlertsProvider } from '@/features/alerts/alerts-context';
 import { useAuth } from '@/lib/auth/auth-context';
 import { can } from '@/lib/auth/types';
 
 export default function AppLayout() {
   const { user } = useAuth();
+  const theme = useTheme();
 
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <AlertsProvider>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.background },
+          headerTintColor: theme.text,
+          headerShadowVisible: false,
+          headerBackButtonDisplayMode: 'minimal',
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-      {/* User management is manager-only. Other roles can't navigate here even by URL. */}
-      <Stack.Protected guard={can(user, 'manageUsers')}>
-        <Stack.Screen name="users/index" options={{ title: 'Team' }} />
-        <Stack.Screen name="users/[id]" options={{ title: 'User' }} />
-      </Stack.Protected>
-    </Stack>
+        {/* Flowchart: Alert Detail → Fix Plan → Fix Done */}
+        <Stack.Screen name="alerts/[id]/index" options={{ title: 'Alert' }} />
+        <Stack.Screen name="alerts/[id]/fix" options={{ title: 'Fix plan' }} />
+        <Stack.Screen
+          name="alerts/[id]/done"
+          options={{ title: 'Fix applied', headerBackVisible: false, gestureEnabled: false }}
+        />
+
+        {/* User management is manager-only. Other roles can't navigate here even by URL. */}
+        <Stack.Protected guard={can(user, 'manageUsers')}>
+          <Stack.Screen name="users/index" options={{ title: 'Team' }} />
+          <Stack.Screen name="users/[id]" options={{ title: 'User' }} />
+        </Stack.Protected>
+      </Stack>
+    </AlertsProvider>
   );
 }
