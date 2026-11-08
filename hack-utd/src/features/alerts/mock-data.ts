@@ -184,10 +184,22 @@ export const panelFailures = [
         id: 'tenantx',
         icon: '🏢',
         label: 'Tenant X',
-        impact: 'Tenant X goes offline and we owe a penalty',
+        impact: 'Tenant X’s websites and apps go offline',
         source: 'lease',
         delayMin: 10,
-        cost: 90_000,
+        cost: 50_000,
+        relationToNext: 'lease promises 99.99% uptime',
+      },
+      {
+        // Same step ids + costs as the Server Room 2 chain, so shared steps line up
+        // (root-cause grouping counts each step once).
+        id: 'penalty',
+        icon: '💸',
+        label: 'Contract penalty',
+        impact: 'We owe Tenant X a penalty for the outage',
+        source: 'lease',
+        delayMin: 20,
+        cost: 40_000,
       },
     ] satisfies DominoDef[],
     fixes: [
