@@ -23,9 +23,9 @@ export function SecurityPanel({ security }: { security: Security }) {
     <View style={styles.container}>
       {security.linkedRisks.length > 0 && (
         <View style={styles.section}>
-          <ThemedText type="subtitle">Linked risks</ThemedText>
+          <ThemedText type="subtitle">Warning signs that add up</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Physical and cyber events that together point to something bigger.
+            Each of these looks small on its own. Together, they could mean someone broke in.
           </ThemedText>
 
           {security.linkedRisks.map((risk) => {
@@ -41,16 +41,16 @@ export function SecurityPanel({ security }: { security: Security }) {
 
                 {events.map((e, i) => (
                   <ThemedText key={e.id} type="small" themeColor="textSecondary">
-                    {i + 1}. [{e.kind}] {e.title}
+                    {i + 1}. {e.title} ({e.kind === 'cyber' ? 'on the computer network' : 'in the building'})
                   </ThemedText>
                 ))}
 
                 <ThemedText type="smallBold" themeColor="danger">
-                  {formatMoney(risk.costAtRisk)} at risk
+                  Could cost {formatMoney(risk.costAtRisk)} if it’s real
                 </ThemedText>
 
                 <ThemedText type="smallBold" style={styles.fixHeading}>
-                  Fix
+                  What to do
                 </ThemedText>
                 {risk.fixSteps.map((step) => (
                   <ThemedText key={step} type="small">
@@ -63,8 +63,8 @@ export function SecurityPanel({ security }: { security: Security }) {
         </View>
       )}
 
-      <EventSection title="Physical" events={physical} />
-      <EventSection title="Cyber" events={cyber} />
+      <EventSection title="In the building" events={physical} />
+      <EventSection title="On the computer network" events={cyber} />
     </View>
   );
 }

@@ -1,29 +1,33 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { Spacing } from '@/constants/theme';
 import { formatMoney, formatTimeAgo, type Alert } from '@/data/buildings';
+import { useTheme } from '@/hooks/use-theme';
+import { useNow } from '@/lib/time/now';
 
 import { SeverityPill } from './severity-pill';
+import { WhatHappensNext } from './what-happens-next';
 
-type AlertCardProps = {
-  alert: Alert;
-  /**
-   * What happens when the card is tapped. Leave it out until the Alert Detail
-   * screen exists — then pass e.g. () => router.push(`/alerts/${alert.id}`).
-   */
-  onPress?: () => void;
-};
+/**
+ * One alert: what's wrong, what it could cost, and (tap to open) what happens
+ * if nobody acts vs. if we act now.
+ *
+ * Not shown on the Data tab any more. Kept here, ready for the Home page.
+ */
+export function AlertCard({ alert }: { alert: Alert }) {
+  const theme = useTheme();
+  const now = useNow();
+  const [expanded, setExpanded] = useState(false);
 
-/** One alert in a building's list: severity, what's wrong, $ at risk, which data flagged it. */
-export function AlertCard({ alert, onPress }: AlertCardProps) {
-  const content = (
+  return (
     <Card>
       <View style={styles.topRow}>
         <SeverityPill severity={alert.severity} />
         <ThemedText type="small" themeColor="textSecondary">
-          {formatTimeAgo(alert.detectedAt)}
+          {formatTimeAgo(alert.detectedAt, now)}
         </ThemedText>
       </View>
 
@@ -32,42 +36,27 @@ export function AlertCard({ alert, onPress }: AlertCardProps) {
         {alert.summary}
       </ThemedText>
 
-      <View style={styles.bottomRow}>
-        <ThemedText type="smallBold" themeColor="danger">
-          {formatMoney(alert.costAtRisk)} at risk
-        </ThemedText>
-        {alert.autoFix && (
-          <ThemedText type="small" themeColor="primary">
-            Auto-fix on
-          </ThemedText>
-        )}
-      </View>
-
-      <ThemedText type="small" themeColor="textSecondary">
-        Flagged by: {alert.sources.join(' · ')}
+      <ThemedText type="smallBold" themeColor="danger">
+        Could cost {formatMoney(alert.costAtRisk)} if nobody acts
       </ThemedText>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        onPress={() => setExpanded((e) => !e)}
+        style={({ pressed }) => [styles.disclosure, { borderColor: theme.border }, pressed && styles.pressed]}>
+        <ThemedText type="smallBold" themeColor="primary">
+          {expanded ? 'Hide ▴' : 'What happens next? ▾'}
+        </ThemedText>
+      </Pressable>
+
+      {expanded && <WhatHappensNext alert={alert} />}
     </Card>
-  );
-
-  if (!onPress) return content;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => pressed && styles.pressed}>
-      {content}
-    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.one,
-  },
+  disclosure: { borderTopWidth: 1, paddingTop: Spacing.two },
   pressed: { opacity: 0.75 },
 });

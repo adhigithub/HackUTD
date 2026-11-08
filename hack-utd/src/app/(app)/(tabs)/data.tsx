@@ -3,7 +3,11 @@ import type { BottomTabNavigationProp } from 'expo-router/js-tabs';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { AlertCard } from '@/components/building/alert-card';
+import { AtAGlance } from '@/components/building/at-a-glance';
+import { BackupPowerCard } from '@/components/building/backup-power-card';
+import { DangerCountdown } from '@/components/building/danger-countdown';
+import { DemoBanner, DemoRecap } from '@/components/building/demo-banner';
+import { EventTimeline } from '@/components/building/event-timeline';
 import { Readings } from '@/components/building/readings';
 import { SecurityPanel } from '@/components/building/security-panel';
 import { BuildingPicker } from '@/components/building-picker';
@@ -17,17 +21,26 @@ import {
   BUILDING_TYPE_LABELS,
   getBuilding,
   isDataCenter,
+  type Alert,
   type Building,
 } from '@/data/buildings';
 import { useTheme } from '@/hooks/use-theme';
+import { useLiveDemo } from '@/lib/demo/live-demo';
+import { buildTimeline } from '@/lib/incidents/timeline';
+import { NowProvider, useTicker } from '@/lib/time/now';
 
-type View_ = 'overview' | 'security';
+type View_ = 'overview' | 'timeline' | 'security';
 
 /**
  * Data tab.
  * 1. Shows a "Pick a building" button that opens the pop-up.
- * 2. After picking, shows that building's live readings and alerts.
+ * 2. After picking, shows how that building is doing in plain words: a summary,
+ *    a "time until too hot" countdown, readings, and backup power. Plus a
+ *    "What happened" timeline.
  * 3. Data centers also get a Security view.
+ * 4. "Live demo" plays a scripted overnight incident at Dallas DC-2.
+ *
+ * Alerts are not listed here. They're moving to the Home page.
  */
 export default function DataScreen() {
   // Which building is picked (null = none yet).
@@ -37,19 +50,23 @@ export default function DataScreen() {
   // Which view is showing for the building.
   const [view, setView] = useState<View_>('overview');
 
-  const building = buildingId ? getBuilding(buildingId) : undefined;
+  // Live clock for the countdown. The demo runs its own, faster one.
+  const realNow = useTicker(1000);
+  const demo = useLiveDemo();
 
   // Tapping "Data" in the bottom tab bar resets back to the start
-  // (no building picked, pop-up closed).
+  // (no building picked, pop-up closed, demo stopped).
   const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();
+  const stopDemo = demo.active ? demo.stop : undefined;
   useEffect(() => {
     const unsubscribe = navigation.addListener('tabPress', () => {
       setBuildingId(null);
       setPickerOpen(false);
       setView('overview');
+      stopDemo?.();
     });
     return unsubscribe; // stop listening when the screen goes away
-  }, [navigation]);
+  }, [navigation, stopDemo]);
 
   function handleSelect(id: string) {
     setBuildingId(id);
@@ -57,20 +74,59 @@ export default function DataScreen() {
     setPickerOpen(false);
   }
 
+  function startDemo() {
+    setPickerOpen(false);
+    setView('overview');
+    demo.start();
+  }
+
+  // What to show: the demo's snapshot, or the live data.
+  let content: { building: Building; alerts: Alert[] } | null = null;
+  if (demo.active) {
+    content = { building: demo.beat.building, alerts: demo.beat.alerts };
+  } else {
+    const building = buildingId ? getBuilding(buildingId) : undefined;
+    if (building) content = { building, alerts: alertsForBuilding(building.id) };
+  }
+
   return (
-    <>
-      <Screen edges={['left', 'right']}>
-        {building ? (
-          <BuildingDetails
-            building={building}
-            view={view}
-            onChangeView={setView}
-            onChangeBuilding={() => setPickerOpen(true)}
+    <NowProvider value={demo.active ? demo.virtualNow : realNow}>
+      <View style={styles.flex}>
+        {demo.active && (
+          <DemoBanner
+            beat={demo.beat}
+            index={demo.index}
+            count={demo.count}
+            progress={demo.progress}
+            paused={demo.paused}
+            isLast={demo.isLast}
+            virtualNow={demo.virtualNow}
+            onTogglePause={demo.togglePause}
+            onPrev={demo.prev}
+            onNext={demo.next}
+            onRestart={demo.start}
+            onExit={demo.stop}
           />
-        ) : (
-          <NoBuildingYet onPick={() => setPickerOpen(true)} />
         )}
-      </Screen>
+
+        <Screen edges={['left', 'right']}>
+          {content ? (
+            <BuildingDetails
+              {...content}
+              view={view}
+              onChangeView={setView}
+              onChangeBuilding={() => {
+                if (demo.active) demo.stop();
+                setPickerOpen(true);
+              }}
+              onStartDemo={demo.active ? undefined : startDemo}
+              recap={demo.active ? demo.beat.recap : undefined}
+            />
+          ) : (
+            <NoBuildingYet onPick={() => setPickerOpen(true)} onStartDemo={startDemo} />
+          )}
+        </Screen>
+      </View>
 
       <BuildingPicker
         visible={pickerOpen}
@@ -78,21 +134,33 @@ export default function DataScreen() {
         onSelect={handleSelect}
         onClose={() => setPickerOpen(false)}
       />
-    </>
+    </NowProvider>
   );
 }
 
 // ─── Shown before any building is picked ────────────────────────────────────
 
-function NoBuildingYet({ onPick }: { onPick: () => void }) {
+function NoBuildingYet({ onPick, onStartDemo }: { onPick: () => void; onStartDemo: () => void }) {
   return (
-    <Card style={styles.empty}>
-      <ThemedText type="subtitle">No building selected</ThemedText>
-      <ThemedText themeColor="textSecondary">
-        Pick a building to see its live HVAC, power, temperature, and occupancy.
-      </ThemedText>
-      <Button title="Pick a building" onPress={onPick} />
-    </Card>
+    <>
+      <Card style={styles.empty}>
+        <ThemedText type="subtitle">No building selected</ThemedText>
+        <ThemedText themeColor="textSecondary">
+          Pick a building to see how it’s doing right now: room temperatures, power, heating and
+          cooling, and how many people are inside.
+        </ThemedText>
+        <Button title="Pick a building" onPress={onPick} />
+      </Card>
+
+      <Card style={styles.empty}>
+        <ThemedText type="subtitle">See it handle a real night</ThemedText>
+        <ThemedText themeColor="textSecondary">
+          A one-minute replay of a 2 AM problem at Dallas DC-2. A storm makes the power flicker, a
+          server room starts overheating, and the team fixes it before anything breaks.
+        </ThemedText>
+        <Button title="▶ Play live demo" variant="secondary" onPress={onStartDemo} />
+      </Card>
+    </>
   );
 }
 
@@ -100,14 +168,31 @@ function NoBuildingYet({ onPick }: { onPick: () => void }) {
 
 type BuildingDetailsProps = {
   building: Building;
+  alerts: Alert[];
   view: View_;
   onChangeView: (view: View_) => void;
   onChangeBuilding: () => void;
+  onStartDemo?: () => void;
+  recap?: { label: string; value: string }[];
 };
 
-function BuildingDetails({ building, view, onChangeView, onChangeBuilding }: BuildingDetailsProps) {
-  const alerts = alertsForBuilding(building.id);
+function BuildingDetails({
+  building,
+  alerts,
+  view,
+  onChangeView,
+  onChangeBuilding,
+  onStartDemo,
+  recap,
+}: BuildingDetailsProps) {
   const showSecurity = isDataCenter(building) && !!building.security;
+
+  const options: { value: View_; label: string }[] = [
+    { value: 'overview', label: 'Right now' },
+    { value: 'timeline', label: 'What happened' },
+  ];
+  if (showSecurity) options.push({ value: 'security', label: '🔒 Security' });
+  const activeView = view === 'security' && !showSecurity ? 'overview' : view;
 
   return (
     <>
@@ -119,46 +204,32 @@ function BuildingDetails({ building, view, onChangeView, onChangeBuilding }: Bui
             {BUILDING_TYPE_LABELS[building.type]} · {building.address}
           </ThemedText>
         </View>
-        <Button title="Change" variant="secondary" size="sm" onPress={onChangeBuilding} />
+        <View style={styles.headerButtons}>
+          <Button title="Change" variant="secondary" size="sm" onPress={onChangeBuilding} />
+          {onStartDemo && <Button title="▶ Live demo" variant="ghost" size="sm" onPress={onStartDemo} />}
+        </View>
       </View>
 
-      {/* Overview / Security switch — only data centers get it */}
-      {showSecurity && (
-        <ViewSwitch
-          value={view}
-          onChange={onChangeView}
-          options={[
-            { value: 'overview', label: 'Overview' },
-            { value: 'security', label: '🔒 Security' },
-          ]}
-        />
-      )}
+      <ViewSwitch value={activeView} onChange={onChangeView} options={options} />
 
-      {view === 'security' && building.security ? (
+      {activeView === 'security' && building.security ? (
         <SecurityPanel security={building.security} />
+      ) : activeView === 'timeline' ? (
+        <EventTimeline {...buildTimeline(building, alerts)} />
       ) : (
         <>
+          {recap && <DemoRecap items={recap} />}
+          <AtAGlance building={building} />
+          <DangerCountdown building={building} alerts={alerts} />
           <Readings building={building} />
-
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
-            Alerts ({alerts.length})
-          </ThemedText>
-          {alerts.length === 0 ? (
-            <Card>
-              <ThemedText themeColor="success">All clear. Nothing needs attention.</ThemedText>
-            </Card>
-          ) : (
-            // TODO: once Alert Detail exists, add
-            //   onPress={() => router.push(`/alerts/${alert.id}`)}
-            alerts.map((alert) => <AlertCard key={alert.id} alert={alert} />)
-          )}
+          <BackupPowerCard power={building.power} />
         </>
       )}
     </>
   );
 }
 
-// ─── Two-button toggle (Overview | Security) ────────────────────────────────
+// ─── Segmented toggle (Right now | What happened | Security) ────────────────
 
 type ViewSwitchProps = {
   value: View_;
@@ -195,6 +266,7 @@ function ViewSwitch({ value, onChange, options }: ViewSwitchProps) {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   empty: { padding: Spacing.four, gap: Spacing.three, marginTop: Spacing.three },
   header: {
     flexDirection: 'row',
@@ -203,7 +275,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.two,
   },
   headerText: { flex: 1, gap: Spacing.one },
-  sectionTitle: { marginTop: Spacing.two },
+  headerButtons: { alignItems: 'flex-end', gap: Spacing.one },
   switch: { flexDirection: 'row', padding: Spacing.one, borderRadius: Radius.md },
   switchOption: {
     flex: 1,
