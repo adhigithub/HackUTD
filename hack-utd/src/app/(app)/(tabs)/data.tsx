@@ -134,6 +134,7 @@ export default function DataScreen() {
         selectedId={buildingId}
         onSelect={handleSelect}
         onClose={() => setPickerOpen(false)}
+        alertsFor={liveAlerts}
       />
     </NowProvider>
   );
