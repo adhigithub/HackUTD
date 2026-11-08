@@ -1,17 +1,17 @@
 /**
  * POST /api/ai — server-only route that turns engine facts into plain English
- * (alert summaries + work orders) via Google Gemini.
+ * (alert summaries + work orders) via Groq.
  *
- * Runs on the server, so GEMINI_API_KEY never reaches the phone. The numbers
+ * Runs on the server, so GROQ_API_KEY never reaches the phone. The numbers
  * all come from engine.ts; the model is told to only reword them, never compute them.
  */
 import { z } from 'zod';
 
-// Gemini's OpenAI-compatible chat endpoint.
-const AI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-// Override with GEMINI_MODEL in .env.local if this one disappears (shared with Ask AI).
-// gemini-2.5-flash is closed to new API keys; gemini-3.5-flash is fast and matches Ask AI.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+// Groq's chat endpoint (OpenAI-compatible).
+const AI_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// Groq retires models often. Override with GROQ_MODEL in .env.local (shared with Ask AI).
+// Current list: https://console.groq.com/docs/models
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 const Facts = z.object({
   building: z.string(),
@@ -51,8 +51,8 @@ const PROMPTS = {
 };
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return Response.json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 });
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return Response.json({ error: 'GROQ_API_KEY is not set' }, { status: 500 });
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Bad request' }, { status: 400 });
@@ -81,10 +81,10 @@ export async function POST(request: Request) {
   }
 
   if (!res.ok) {
-    // Log Gemini's reason server-side (shows in the Metro terminal), never the key.
-    console.warn(`[api/ai] Gemini ${res.status}:`, (await res.text()).slice(0, 300));
-    // 429 = rate limit. The app falls back to template text.
-    return Response.json({ error: `gemini_${res.status}` }, { status: res.status === 429 ? 429 : 502 });
+    // Log Groq's reason server-side (shows in the Metro terminal), never the key.
+    console.warn(`[api/ai] Groq ${res.status}:`, (await res.text()).slice(0, 300));
+    // 429 = Groq free-tier rate limit. The app falls back to template text.
+    return Response.json({ error: `groq_${res.status}` }, { status: res.status === 429 ? 429 : 502 });
   }
 
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };

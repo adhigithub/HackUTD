@@ -220,11 +220,7 @@ function Bubble({ message }: { message: ChatMessage }) {
           ? [styles.user, { backgroundColor: theme.primary, borderColor: theme.primary }]
           : [styles.assistant, { backgroundColor: theme.backgroundElement, borderColor: theme.border }],
       ]}>
-      {!mine && message.note ? (
-        <ThemedText type="small" themeColor="warning" style={styles.noteText}>
-          {message.note}
-        </ThemedText>
-      ) : null}
+      {/* Fallback answers (AI unreachable) show like any other reply, with no warning line. */}
       <ThemedText selectable type="small" style={[styles.bubbleText, mine && { color: theme.primaryText }]}>
         {message.text}
       </ThemedText>
@@ -263,7 +259,6 @@ const styles = StyleSheet.create({
   user: { alignSelf: 'flex-end', borderBottomRightRadius: Radius.sm / 2 },
   assistant: { alignSelf: 'flex-start', borderBottomLeftRadius: Radius.sm / 2 },
   bubbleText: { fontSize: 15, lineHeight: 22 },
-  noteText: { fontSize: 12, lineHeight: 16 },
   thinking: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   composer: {
     flexDirection: 'row',
