@@ -1,5 +1,5 @@
 import type { Role } from '@/lib/auth/types';
-import type { ReportPeriod } from '@/lib/portfolio/report';
+import type { LiveReportEntries, ReportPeriod } from '@/lib/portfolio/report';
 
 export type ChatRole = 'user' | 'assistant';
 
@@ -11,6 +11,8 @@ export type AskRequest = {
   role: Role;
   /** The report period the person is looking at, in days. */
   period: ReportPeriod;
+  /** Live fixes / overnight savings / open alerts from the app, so answers match the Report. */
+  live?: LiveReportEntries;
 };
 
 export type AskResponse = { answer: string };

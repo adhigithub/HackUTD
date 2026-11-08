@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useLiveReportEntries } from '@/features/alerts/report-bridge';
 import { ask, type ChatMessage } from '@/lib/ai/ask-client';
 import { SUGGESTED_QUESTIONS } from '@/lib/ai/suggestions';
 import { ASK_LIMITS } from '@/lib/ai/types';
@@ -35,6 +36,9 @@ export default function AskScreen() {
   const periodParam = Number(params.period);
   const period: ReportPeriod = isReportPeriod(periodParam) ? periodParam : 30;
 
+  // Live fixes / open alerts, so Ask AI's answers match the Report and Home.
+  const live = useLiveReportEntries();
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState(false);
@@ -51,13 +55,13 @@ export default function AskScreen() {
       setDraft('');
       setPending(true);
       try {
-        const reply = await ask(history, user.role, period);
+        const reply = await ask(history, user.role, period, live);
         setMessages((prev) => [...prev, { id: newId(), role: 'assistant', ...reply }]);
       } finally {
         setPending(false);
       }
     },
-    [messages, pending, period, user]
+    [messages, pending, period, user, live]
   );
 
   // A suggestion tapped on the Report screen arrives as ?q=… and is sent once.
@@ -70,7 +74,7 @@ export default function AskScreen() {
 
   if (!user) return null;
 
-  const report = buildReport(period);
+  const report = buildReport(period, new Date(), live);
   const range = `${formatShortDate(report.startISO)} – ${formatShortDate(report.endISO)}`;
   const canSend = draft.trim().length > 0 && !pending;
 

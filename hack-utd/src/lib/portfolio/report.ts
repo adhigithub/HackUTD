@@ -70,8 +70,15 @@ export type ReportSummary = {
   moneyAtRisk: number;
 };
 
-/** Extra entries from the live alerts system (fixes approved in the app, overnight auto-fixes). */
-export type LiveReportEntries = { incidents?: ResolvedIncident[]; wasteNights?: WasteNight[] };
+/**
+ * Entries from the live alerts system: fixes approved in the app, overnight
+ * auto-fixes, and the alerts open right now (these replace the demo list).
+ */
+export type LiveReportEntries = {
+  incidents?: ResolvedIncident[];
+  wasteNights?: WasteNight[];
+  activeAlerts?: ActiveAlert[];
+};
 
 export function buildReport(
   periodDays: ReportPeriod,
@@ -128,6 +135,7 @@ export function buildReport(
     zoneMap.set(key, entry);
   }
 
+  const openAlerts = live.activeAlerts ?? ACTIVE_ALERTS;
   const fixCounts = { auto: waste.length, one_tap: 0, escalated: 0 };
   for (const i of incidents) fixCounts[i.fixMode] += 1;
 
@@ -149,8 +157,8 @@ export function buildReport(
     byCategory,
     wasteByZone: [...zoneMap.values()].sort((a, b) => b.saved - a.saved),
     incidents,
-    activeAlerts: [...ACTIVE_ALERTS].sort((a, b) => b.moneyAtRisk - a.moneyAtRisk),
-    moneyAtRisk: sum(ACTIVE_ALERTS.map((a) => a.moneyAtRisk)),
+    activeAlerts: [...openAlerts].sort((a, b) => b.moneyAtRisk - a.moneyAtRisk),
+    moneyAtRisk: sum(openAlerts.map((a) => a.moneyAtRisk)),
   };
 }
 
@@ -191,9 +199,9 @@ export function reportAsText(r: ReportSummary) {
  * Everything the AI is allowed to know, as compact text. Built from the same
  * functions the screen uses, so the AI and the screen can't disagree.
  */
-export function buildAiContext(now = new Date()) {
-  const month = buildReport(30, now);
-  const week = buildReport(7, now);
+export function buildAiContext(now = new Date(), live: LiveReportEntries = {}) {
+  const month = buildReport(30, now, live);
+  const week = buildReport(7, now, live);
 
   const buildings = BUILDINGS.map((b) => {
     const p = IMPACT_PROFILES[b.type];
