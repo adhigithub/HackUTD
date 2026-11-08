@@ -1,3 +1,5 @@
+import { BlackOpsOne_400Regular, useFonts } from '@expo-google-fonts/black-ops-one';
+import { NewTegomin_400Regular } from '@expo-google-fonts/new-tegomin';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -20,13 +22,16 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();
+  const [fontsLoaded, fontError] = useFonts({ BlackOpsOne_400Regular, NewTegomin_400Regular });
+  // Fall back to the system font rather than hang if the font fails to load.
+  const ready = !isLoading && (fontsLoaded || !!fontError);
 
   useEffect(() => {
-    if (!isLoading) SplashScreen.hideAsync();
-  }, [isLoading]);
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
-  // Keep the native splash up until we know whether someone is signed in.
-  if (isLoading) return null;
+  // Keep the native splash up until we know who's signed in and the custom fonts are ready.
+  if (!ready) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
