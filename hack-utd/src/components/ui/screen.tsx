@@ -25,7 +25,6 @@ export function Screen({ children, edges = ['top', 'left', 'right'], refreshCont
   return (
     <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: theme.background }]}>
       <GridBackground />
-      <GridBackground />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

@@ -33,7 +33,7 @@ export const Colors = {
     backgroundSelected: '#3769b0',
     textSecondary: '#93A3B8',
     border: '#fafafa56',
-    primary: 'm#95c910',
+    primary: '#95c910',
     primaryText: '#FFFFFF',
     primarySoft: '#18376c',
     danger: '#F26464',
