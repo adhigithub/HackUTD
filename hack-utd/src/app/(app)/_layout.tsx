@@ -28,6 +28,9 @@ export default function AppLayout() {
           options={{ title: 'Fix applied', headerBackVisible: false, gestureEnabled: false }}
         />
 
+        {/* Reached from the Account tab; every signed-in role can change their own password. */}
+        <Stack.Screen name="change-password" options={{ title: 'Change password' }} />
+
         {/* Ask AI belongs to the Client Report, so it follows the same permission. */}
         <Stack.Protected guard={can(user, 'viewReports')}>
           <Stack.Screen name="ask" options={{ title: 'Ask AI' }} />
