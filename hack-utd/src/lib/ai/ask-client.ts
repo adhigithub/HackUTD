@@ -51,14 +51,14 @@ export async function ask(
       source: 'offline',
       note:
         data && 'code' in data && data.code === 'not_configured'
-          ? 'AI isn’t set up on the server yet. Showing an answer from the report data.'
-          : 'AI is unavailable right now. Showing an answer from the report data.',
+          ? 'AI is off right now, so this is a quick answer from the report.'
+          : 'AI is busy right now, so this is a quick answer from the report.',
     };
   } catch {
     return {
       text: offlineAnswer(question, period),
       source: 'offline',
-      note: 'Couldn’t reach AI. Showing an answer from the report data.',
+      note: 'Couldn’t reach the AI, so this is a quick answer from the report.',
     };
   } finally {
     clearTimeout(timer);

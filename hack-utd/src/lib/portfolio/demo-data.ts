@@ -4,6 +4,9 @@ import type { ActiveAlert, Building, BuildingType, ResolvedIncident, WasteNight 
  * Demo portfolio: one data center, one mall, one office.
  * Dates are generated relative to "now" so the report always shows recent activity.
  * All numbers are illustrative demo assumptions.
+ *
+ * Wording is written for people new to buildings (e.g. hackathon judges):
+ * everyday words first, technical names only where they help.
  */
 
 export const ELECTRICITY_PRICE_PER_KWH = 0.12;
@@ -14,7 +17,7 @@ export const BUILDINGS: Building[] = [
     name: 'Dallas DC-2',
     type: 'data_center',
     city: 'Dallas, TX',
-    tenants: ['Tenant X (cloud hosting, 99.99% uptime SLA)', 'Northwind Analytics'],
+    tenants: ['Tenant X (cloud hosting, promised 99.99% uptime)', 'Northwind Analytics'],
   },
   {
     id: 'galleria-mall',
@@ -28,7 +31,7 @@ export const BUILDINGS: Building[] = [
     name: 'Tower One',
     type: 'office',
     city: 'Plano, TX',
-    tenants: ['Floors 2–7: Contoso Legal (9 AM–6 PM)', 'Floors 8–12: Fabrikam Insurance'],
+    tenants: ['Floors 2–7: Contoso Legal (open 9 AM–6 PM)', 'Floors 8–12: Fabrikam Insurance'],
   },
 ];
 
@@ -40,7 +43,7 @@ export const IMPACT_PROFILES: Record<
   office: {
     outageImpact: 'Low',
     whatMatters: 'Comfort and energy cost',
-    leasePromise: 'Business-hours comfort',
+    leasePromise: 'Comfortable during business hours',
   },
   mall: {
     outageImpact: 'Medium',
@@ -49,8 +52,8 @@ export const IMPACT_PROFILES: Record<
   },
   data_center: {
     outageImpact: 'Very high',
-    whatMatters: 'Uptime, lease penalties, equipment',
-    leasePromise: 'Very high uptime (99.99%)',
+    whatMatters: 'Staying online, contract penalties, equipment',
+    leasePromise: 'Online 99.99% of the time',
   },
 };
 
@@ -70,21 +73,21 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'dallas-dc-2',
       category: 'cooling',
       outcome: 'outage_prevented',
-      title: 'Server Room 2 slowly overheating',
+      title: 'Server room slowly overheating',
       summary:
-        'Each reading looked normal, but the trend (78°F, rising 1°F every 10 min) predicted the 90°F danger limit in about 2 hours. Cooling Unit 2 is 18 years old with 4 repairs this year, and servers were at 92% load.',
+        'Server Room 2 was 78°F and warming 1°F every 10 minutes. Each reading looked fine, but the trend meant it would hit the 90°F danger point in about 2 hours. Its cooling unit is 18 years old and was repaired 4 times this year.',
       occurredAt: daysAgo(now, 3, 23, 10),
       chain: [
-        'Panel B voltage dipping',
-        'Cooling Unit 2 struggling',
-        'Server Room 2 overheats',
-        'Tenant X servers go down',
-        'Lease penalty + lost business',
+        'Power box voltage dipping',
+        'Cooling unit struggling',
+        'Server room overheats',
+        'Tenant X’s computers shut down',
+        'Contract penalty + lost business',
       ],
       stoppedAt: 1,
-      fix: 'Turned on backup Cooling Unit 4 and shifted 30% of Room 2 server load to Room 3.',
+      fix: 'Turned on a backup cooling unit and moved some computer work to another room.',
       fixMode: 'one_tap',
-      sources: ['Panel sensors', 'HVAC / BMS', 'Temperature sensors', 'Maintenance records', 'Server load', 'Tenant lease'],
+      sources: ['Power sensors', 'Cooling system', 'Temperature sensors', 'Repair history', 'Server workload', 'Tenant contract'],
       costAvoided: 67000,
     },
     {
@@ -92,20 +95,20 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'galleria-mall',
       category: 'power',
       outcome: 'outage_prevented',
-      title: 'Panel B showing failure signs before a storm',
+      title: 'Power box about to fail before a storm',
       summary:
-        'Panel B voltage dropped 8% three times in one day and the panel ran at 140°F. It had not been inspected in 2 years and a storm was forecast that night. Risk score: 100 out of 100.',
+        'An electrical panel (the box that sends power to the food court) had 3 voltage drops in one day and was running hot at 140°F. It hadn’t been inspected in 2 years, and a storm was coming that night.',
       occurredAt: daysAgo(now, 6, 16, 30),
       chain: [
-        'Panel B failing',
+        'Power box failing',
         'Food court + 14 stores lose power',
         'Stores close, freezers warm up',
-        'Lost sales + food spoilage',
+        'Lost sales + spoiled food',
       ],
       stoppedAt: 0,
-      fix: 'Moved Panel B critical load to the backup feed and sent an electrician, who found and fixed a loose connection.',
+      fix: 'Switched the important equipment to backup power and sent an electrician, who fixed a loose wire.',
       fixMode: 'one_tap',
-      sources: ['Panel sensors', 'Maintenance records', 'Weather', 'Tenant lease'],
+      sources: ['Power sensors', 'Repair history', 'Weather', 'Tenant contract'],
       costAvoided: 18500,
     },
     {
@@ -113,20 +116,20 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'dallas-dc-2',
       category: 'security',
       outcome: 'threat_stopped',
-      title: 'After-hours badge swipe + new server login',
+      title: 'Someone entered the server room at 2 AM',
       summary:
-        'A badge opened the Server Room 1 door at 2:04 AM, and 3 minutes later a new account logged in from a server in that room. Either event alone is minor; together they look like a break-in.',
+        'A key card opened the server room door at 2:04 AM, and 3 minutes later a new account logged into a computer in that room. Each event alone is minor. Together, they look like a break-in.',
       occurredAt: daysAgo(now, 9, 2, 4),
       chain: [
-        'Badge used at 2:04 AM',
-        'New login from that room’s server',
-        'Possible data theft',
-        'Tenant breach + contract penalties',
+        'Key card used at 2:04 AM',
+        'Unknown login on a server',
+        'Customer data stolen',
+        'Data breach + contract penalties',
       ],
       stoppedAt: 1,
-      fix: 'Blocked the login, locked the Room 1 door, and paged security. No one answered in 10 minutes, so it escalated to the backup guard.',
+      fix: 'Blocked the login, locked the door, and alerted security. No one answered in 10 minutes, so it alerted the backup guard.',
       fixMode: 'escalated',
-      sources: ['Badge system', 'Network logs', 'Cameras', 'Tenant lease'],
+      sources: ['Key card system', 'Network logs', 'Cameras', 'Tenant contract'],
       costAvoided: 85000,
     },
     {
@@ -134,15 +137,15 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'galleria-mall',
       category: 'cooling',
       outcome: 'failure_prevented',
-      title: 'Food court walk-in freezer warming',
+      title: 'Food court freezer warming up',
       summary:
-        'The freezer compressor started short-cycling overnight and the box warmed from 0°F to 14°F. At that rate it would pass the food-safety limit before the food court opened.',
+        'The walk-in freezer’s motor kept switching on and off overnight, and it warmed from 0°F to 14°F. At that rate, the food would be unsafe before the food court opened.',
       occurredAt: daysAgo(now, 12, 5, 40),
-      chain: ['Compressor short-cycling', 'Freezer above safe temp', 'Food thrown out', 'Tenant claim + inspection'],
+      chain: ['Freezer motor failing', 'Freezer too warm', 'Food thrown out', 'Tenant claim + health inspection'],
       stoppedAt: 0,
-      fix: 'Sent a refrigeration technician before opening. Compressor relay replaced by 8:15 AM.',
+      fix: 'Sent a repair technician before opening. Fixed by 8:15 AM.',
       fixMode: 'one_tap',
-      sources: ['Temperature sensors', 'Maintenance records', 'Tenant lease'],
+      sources: ['Temperature sensors', 'Repair history', 'Tenant contract'],
       costAvoided: 6200,
     },
     {
@@ -150,15 +153,15 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'dallas-dc-2',
       category: 'power',
       outcome: 'outage_prevented',
-      title: 'Backup power not ready before a storm',
+      title: 'Backup batteries not ready before a storm',
       summary:
-        'UPS battery string B had missed 2 monthly tests and a storm was forecast. The grid flickered for 6 seconds that night, and the repaired UPS carried the load.',
+        'The backup batteries that keep servers running during a blackout had skipped 2 monthly tests, and a storm was coming. That night the power flickered for 6 seconds, and the repaired batteries kept everything running.',
       occurredAt: daysAgo(now, 14, 9, 0),
-      chain: ['UPS string B untested', 'Grid flicker during storm', 'Servers lose power', 'Tenant X SLA breach'],
+      chain: ['Backup batteries untested', 'Power flickers in storm', 'Servers lose power', 'Broken 99.99% uptime promise'],
       stoppedAt: 0,
-      fix: 'Sent a technician to test the UPS and replace 3 weak battery modules before the storm.',
+      fix: 'Sent a technician to test the batteries and replace 3 weak ones before the storm.',
       fixMode: 'one_tap',
-      sources: ['Maintenance records', 'Backup power status', 'Weather', 'Tenant lease'],
+      sources: ['Repair history', 'Backup power status', 'Weather', 'Tenant contract'],
       costAvoided: 48000,
     },
     {
@@ -166,15 +169,15 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'tower-one',
       category: 'cooling',
       outcome: 'failure_prevented',
-      title: 'Chiller #3 wearing out before a heat wave',
+      title: 'AC unit wearing out before a heat wave',
       summary:
-        'Chiller #3 drew 22% more power to hold the same temperature. It is 18 years old, was repaired 4 times this year, and a 95°F heat wave was forecast.',
+        'The building’s main AC unit (Chiller #3) was using 22% more power to keep the same temperature, a sign it was wearing out. It is 18 years old, was repaired 4 times this year, and a 95°F heat wave was coming.',
       occurredAt: daysAgo(now, 21, 14, 0),
-      chain: ['Chiller #3 degrading', 'Chiller trips in 95°F heat', 'Floors 8–12 too hot', 'Tenant complaints + rent credits'],
+      chain: ['AC unit wearing out', 'AC breaks in 95°F heat', 'Floors 8–12 too hot', 'Tenant complaints + rent refunds'],
       stoppedAt: 0,
       fix: 'Booked the repair before the heat wave and pre-cooled Floors 8–12 overnight.',
       fixMode: 'one_tap',
-      sources: ['HVAC / BMS', 'Smart meters', 'Maintenance records', 'Weather'],
+      sources: ['Cooling system', 'Electric meters', 'Repair history', 'Weather'],
       costAvoided: 9800,
     },
     {
@@ -182,32 +185,32 @@ export function buildIncidents(now: Date): ResolvedIncident[] {
       buildingId: 'tower-one',
       category: 'power',
       outcome: 'outage_prevented',
-      title: 'Ignored leak alert escalated',
+      title: 'Ignored water leak alert',
       summary:
-        'A leak sensor in the Floor 2 electrical room went wet and the alert sat unacknowledged for 15 minutes. The app escalated it to the next technician on the list.',
+        'A water sensor went off in the Floor 2 electrical room, and nobody responded for 15 minutes. The app automatically passed the alert to the next technician on the list.',
       occurredAt: daysAgo(now, 26, 19, 20),
-      chain: ['Leak in electrical room', 'Water reaches Panel 2A', 'Floor 2 loses power', 'Tenant downtime'],
+      chain: ['Water leak near electrical room', 'Water reaches power box', 'Floor 2 loses power', 'Tenant can’t work'],
       stoppedAt: 0,
-      fix: 'Escalated to the backup technician, who shut the valve and dried the room before water reached the panel.',
+      fix: 'The backup technician shut off the water and dried the room before it reached the power box.',
       fixMode: 'escalated',
-      sources: ['Leak sensors', 'Maintenance tickets', 'Panel sensors'],
+      sources: ['Water sensors', 'Repair tickets', 'Power sensors'],
       costAvoided: 12500,
     },
   ];
 }
 
-/** Nightly setbacks: HVAC/lights left on in an empty space, switched off automatically. */
+/** Nightly setbacks: AC/lights left on in an empty space, switched off automatically. */
 export function buildWasteNights(now: Date, days = 30): WasteNight[] {
   const nights: WasteNight[] = [];
   const rules = [
     // Tower One Floor 4: 85 kW × 7 h (the demo example). Skipped on nights someone worked late.
-    { buildingId: 'tower-one', zone: 'Floor 4 HVAC', kw: 85, hours: 7, skip: (i: number) => i % 6 === 2 },
-    // Galleria: atrium lights + after-hours HVAC once stores close.
-    { buildingId: 'galleria-mall', zone: 'Atrium lights + HVAC', kw: 60, hours: 6, skip: (i: number) => i % 9 === 4 },
+    { buildingId: 'tower-one', zone: 'Floor 4 AC', kw: 85, hours: 7, skip: (i: number) => i % 6 === 2 },
+    // Galleria: lobby lights + AC once stores close.
+    { buildingId: 'galleria-mall', zone: 'Lobby lights + AC', kw: 60, hours: 6, skip: (i: number) => i % 9 === 4 },
     // DC-2 office wing (not the server halls): empty on weekends.
     {
       buildingId: 'dallas-dc-2',
-      zone: 'Office wing HVAC',
+      zone: 'Office wing AC',
       kw: 20,
       hours: 8,
       skip: (_i: number, day: number) => day !== 0 && day !== 6,
@@ -238,34 +241,34 @@ export const ACTIVE_ALERTS: ActiveAlert[] = [
     buildingId: 'dallas-dc-2',
     category: 'cooling',
     severity: 'watch',
-    title: 'Server Room 3 warming under extra load',
+    title: 'Another server room is warming up',
     detail:
-      'Room 3 took on load from Room 2 and is at 76°F with servers at 88%. A cooling problem plus high load is riskier than either alone.',
+      'Server Room 3 took on extra work from Room 2 and is now 76°F with its servers 88% busy. Heat plus heavy work is riskier than either one alone.',
     moneyAtRisk: 24000,
     eta: 'in about 3 hours',
-    recommendedFix: 'Move load back to Room 2 once Cooling Unit 2 is repaired, or start a portable cooler.',
+    recommendedFix: 'Move the work back to Room 2 once its cooling is repaired, or bring in a portable cooler.',
   },
   {
     id: 'galleria-panel-d',
     buildingId: 'galleria-mall',
     category: 'power',
     severity: 'watch',
-    title: 'Panel D running hot (131°F)',
-    detail: 'Panel temperature has risen 9°F this week with no change in load.',
+    title: 'A power box is running hot (131°F)',
+    detail: 'Its temperature rose 9°F this week even though it isn’t carrying more power.',
     moneyAtRisk: 9500,
     eta: 'within 48 hours',
-    recommendedFix: 'Send an electrician for a thermal scan.',
+    recommendedFix: 'Send an electrician to check it with a heat camera.',
   },
   {
     id: 'tower-floor-7',
     buildingId: 'tower-one',
     category: 'waste',
     severity: 'act',
-    title: 'Floor 7 HVAC on with 0 people',
-    detail: 'Last badge swipe 6:41 PM, no devices on Wi-Fi, cooling to 70°F.',
+    title: 'AC running on an empty floor',
+    detail: 'Floor 7 has been empty since 6:41 PM, but the AC is still cooling it to 70°F.',
     moneyAtRisk: 64,
     eta: 'tonight',
-    recommendedFix: 'Auto setback to unoccupied mode (reverts on next badge swipe).',
+    recommendedFix: 'The app will switch it to night mode automatically. It turns back on when someone badges in.',
   },
 ];
 

@@ -36,7 +36,7 @@ export function AskAiCard({ role, period }: { role: Role; period: ReportPeriod }
         <View style={styles.flex}>
           <ThemedText type="subtitle">Ask AI</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Ask about this report. Answers come from your connected building data.
+            Ask anything about this report in plain English. Tap a question to try it.
           </ThemedText>
         </View>
       </View>

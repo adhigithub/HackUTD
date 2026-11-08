@@ -21,7 +21,7 @@ import { ask, type ChatMessage } from '@/lib/ai/ask-client';
 import { SUGGESTED_QUESTIONS } from '@/lib/ai/suggestions';
 import { ASK_LIMITS } from '@/lib/ai/types';
 import { useAuth } from '@/lib/auth/auth-context';
-import { formatShortDate, plural } from '@/lib/portfolio/format';
+import { formatShortDate } from '@/lib/portfolio/format';
 import { buildReport, isReportPeriod, type ReportPeriod } from '@/lib/portfolio/report';
 
 let nextId = 0;
@@ -112,7 +112,7 @@ export default function AskScreen() {
         ListHeaderComponent={
           <View style={styles.intro}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
-              {`Answers use your portfolio data for ${range}: 3 buildings, ${plural(report.incidents.length, 'problem')} stopped, and ${plural(report.activeAlerts.length, 'open alert')}.`}
+              {`Ask me anything about your 3 buildings (${range}). I only use your building data, so I won’t make things up.`}
             </ThemedText>
           </View>
         }

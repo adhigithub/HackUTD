@@ -1,5 +1,5 @@
 import { BUILDINGS, IMPACT_PROFILES } from '@/lib/portfolio/demo-data';
-import { formatNumber, formatShortDate, formatUSD, plural } from '@/lib/portfolio/format';
+import { formatShortDate, formatUSD, plural } from '@/lib/portfolio/format';
 import { buildReport, buildingName, type ReportPeriod } from '@/lib/portfolio/report';
 import { BUILDING_TYPE_LABELS, CATEGORY_LABELS } from '@/lib/portfolio/types';
 
@@ -30,7 +30,7 @@ export function offlineAnswer(question: string, period: ReportPeriod = 30): stri
     ].join('\n');
   }
 
-  if (has('risk', 'right now', 'open', 'active', 'next', 'attention', 'priorit')) {
+  if (has('risk', 'right now', 'open', 'active', 'next', 'attention', 'priorit', 'ignore', 'warm')) {
     return [
       `${formatUSD(r.moneyAtRisk)} is at risk right now across ${plural(r.activeAlerts.length, 'open alert')}, highest first:`,
       ...r.activeAlerts.map(
@@ -45,15 +45,15 @@ export function offlineAnswer(question: string, period: ReportPeriod = 30): stri
       ...(['office', 'mall', 'data_center'] as const).map(
         (t) => `- ${BUILDING_TYPE_LABELS[t]}: ${IMPACT_PROFILES[t].outageImpact} impact (${IMPACT_PROFILES[t].whatMatters.toLowerCase()})`
       ),
-      'That is why Dallas DC-2 has the largest savings: its tenant lease promises 99.99% uptime, so every domino that falls carries a penalty.',
+      'That is why Dallas DC-2 saved the most: its contract promises the tenant it will stay online 99.99% of the time, so every problem that spreads there comes with a penalty.',
     ].join('\n');
   }
 
   if (has('waste', 'hvac', 'overnight', 'energy', 'night', 'lights', 'kwh', 'empty')) {
     return [
-      `Overnight waste cut: ${formatUSD(r.wasteSaved)} from ${plural(r.wasteNights, 'automatic setback')} (${formatNumber(r.wasteKwh)} kWh), about ${formatUSD(r.wasteAnnualized)} a year at this rate.`,
+      `Turning off AC and lights in empty buildings at night saved ${formatUSD(r.wasteSaved)} over ${plural(r.wasteNights, 'night')} (about ${formatUSD(r.wasteAnnualized)} a year at this rate).`,
       ...r.wasteByZone.map((z) => `- ${z.building.name}, ${z.zone}: ${plural(z.nights, 'night')}, ${formatUSD(z.saved)}`),
-      'Each setback only runs when HVAC is on, nobody is badged in, and it is outside lease hours. It switches back on the next badge swipe.',
+      'It only does this when nobody has badged in and it is after business hours. The AC turns back on as soon as someone badges in.',
     ].join('\n');
   }
 
@@ -76,7 +76,7 @@ export function offlineAnswer(question: string, period: ReportPeriod = 30): stri
   }
 
   if (has('number', 'come from', 'calculat', 'real', 'accurate', 'source')) {
-    return 'The app calculates every figure in plain code from the connected building data. Waste is kW × hours × $0.12/kWh. Avoided costs add up what each domino in the chain would have cost (equipment, lost sales, lease penalties) for that building type. In this demo they are illustrative estimates, not audited figures.';
+    return 'The app does the math itself from the building data, not the AI. Energy savings are the power used times the hours it would have run times the electricity price ($0.12 per kWh). Problem savings add up what each step of the chain would have cost if it happened: repairs, lost sales, and contract penalties. In this demo they are estimates, not real client numbers.';
   }
 
   // Default: a client-ready summary.

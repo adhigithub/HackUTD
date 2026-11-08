@@ -24,19 +24,19 @@ export type Building = {
 export type IssueCategory = 'cooling' | 'power' | 'security' | 'waste';
 
 export const CATEGORY_LABELS: Record<IssueCategory, string> = {
-  cooling: 'Cooling & temperature',
-  power: 'Power',
-  security: 'Security',
-  waste: 'Overnight waste',
+  cooling: 'Overheating & cooling',
+  power: 'Power problems',
+  security: 'Break-ins',
+  waste: 'Energy left on at night',
 };
 
 /** How a fix was carried out (see the safety rules in the app description). */
 export type FixMode = 'auto' | 'one_tap' | 'escalated';
 
 export const FIX_MODE_LABELS: Record<FixMode, string> = {
-  auto: 'Auto-fixed',
-  one_tap: 'One-tap fix',
-  escalated: 'Escalated',
+  auto: 'Fixed automatically',
+  one_tap: 'Fixed with one tap',
+  escalated: 'Sent to backup person',
 };
 
 export type IncidentOutcome = 'outage_prevented' | 'failure_prevented' | 'threat_stopped';

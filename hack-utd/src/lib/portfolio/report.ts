@@ -157,7 +157,7 @@ export function reportAsText(r: ReportSummary) {
     `Outages prevented: ${r.outagesPrevented}`,
     `Equipment failures caught early: ${r.failuresPrevented}`,
     `Security threats stopped: ${r.threatsStopped}`,
-    `Overnight waste cut: ${formatUSD(r.wasteSaved)} over ${plural(r.wasteNights, 'automatic setback')} (about ${formatUSD(r.wasteAnnualized)} a year)`,
+    `Energy saved at night: ${formatUSD(r.wasteSaved)} over ${plural(r.wasteNights, 'night')} (about ${formatUSD(r.wasteAnnualized)} a year)`,
     '',
     'By building:',
     ...r.byBuilding.map(
@@ -235,7 +235,7 @@ export function buildAiContext(now = new Date()) {
     'PROBLEMS STOPPED IN THE LAST 30 DAYS (newest first)',
     ...incidents,
     '',
-    'OVERNIGHT WASTE CUT IN THE LAST 30 DAYS (automatic setback when HVAC/lights run in an empty space)',
+    'ENERGY SAVED AT NIGHT IN THE LAST 30 DAYS (the app switched AC/lights in an empty space to night mode automatically)',
     ...waste,
     '',
     `OPEN ALERTS RIGHT NOW (total money at risk ${formatUSD(month.moneyAtRisk)})`,
