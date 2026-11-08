@@ -20,14 +20,22 @@ export function severityColors(severity: Severity, theme: Theme) {
   }
 }
 
-/** Small colored label like "CRITICAL". */
+/** Everyday words for how serious something is. */
+export const SEVERITY_LABELS: Record<Severity, string> = {
+  critical: 'Urgent',
+  high: 'Serious',
+  medium: 'Worth a look',
+  low: 'Minor',
+};
+
+/** Small colored label like "URGENT". */
 export function SeverityPill({ severity }: { severity: Severity }) {
   const theme = useTheme();
   const { fg, bg } = severityColors(severity, theme);
   return (
     <View style={[styles.pill, { backgroundColor: bg }]}>
       <ThemedText type="smallBold" style={[styles.label, { color: fg }]}>
-        {severity.toUpperCase()}
+        {SEVERITY_LABELS[severity].toUpperCase()}
       </ThemedText>
     </View>
   );
