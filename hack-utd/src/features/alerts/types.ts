@@ -112,6 +112,11 @@ export type Alert = {
   severity: Severity;
   /** Epoch ms when the scan flagged this. Timers count from here. */
   detectedAt: number;
+  /**
+   * Epoch ms of the newest sensor reading behind this alert. A fix only covers
+   * readings up to the moment it was applied; a newer bad reading reopens the alert.
+   */
+  dataAt: number;
   /** The headline number from the detection rule, e.g. "Risk score 100/100". */
   metric: string;
   signals: Signal[];
