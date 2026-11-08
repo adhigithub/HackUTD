@@ -25,20 +25,23 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: 700,
   },
+  // Body text uses New Tegomin (single weight, so no fontWeight).
   default: {
+    fontFamily: Fonts.body,
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: 500,
   },
+  // Headings use Black Ops One (loaded in the root layout). It only ships one
+  // weight, so no fontWeight here — a bold weight would fall back to the system font.
   title: {
+    fontFamily: Fonts.heading,
     fontSize: 30,
-    fontWeight: 700,
-    lineHeight: 36,
+    lineHeight: 38,
   },
   subtitle: {
+    fontFamily: Fonts.heading,
     fontSize: 20,
-    lineHeight: 26,
-    fontWeight: 700,
+    lineHeight: 28,
   },
   link: {
     lineHeight: 30,

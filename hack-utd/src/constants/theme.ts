@@ -57,18 +57,24 @@ export const Fonts = Platform.select({
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
+    heading: 'BlackOpsOne_400Regular',
+    body: 'NewTegomin_400Regular',
   },
   default: {
     sans: 'normal',
     serif: 'serif',
     rounded: 'normal',
     mono: 'monospace',
+    heading: 'BlackOpsOne_400Regular',
+    body: 'NewTegomin_400Regular',
   },
   web: {
     sans: 'var(--font-display)',
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
+    heading: 'BlackOpsOne_400Regular',
+    body: 'NewTegomin_400Regular',
   },
 });
 
