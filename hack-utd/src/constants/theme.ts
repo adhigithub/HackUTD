@@ -25,6 +25,7 @@ export const Colors = {
     successSoft: '#E5F5EE',
     gridLine: 'rgba(26, 95, 208, 0.08)',
     gridLineMajor: 'rgba(26, 95, 208, 0.16)',
+    ticketBackground: '#E4ECF8',
   },
   dark: {
     text: '#EAF1FB',
@@ -32,11 +33,11 @@ export const Colors = {
     backgroundElement: '#233248',
     backgroundSelected: '#3769b0',
     textSecondary: '#93A3B8',
-    border: '#fafafa56',
+    border: '#fdfdfd9f',
     primary: '#95c910',
     primaryText: '#FFFFFF',
     primarySoft: '#18376c',
-    danger: '#F26464',
+    danger: '#f54545',
     dangerSoft: '#3A1719',
     warning: '#F0B34A',
     warningSoft: '#3A2A10',
@@ -44,6 +45,7 @@ export const Colors = {
     successSoft: '#0F3226',
     gridLine: 'rgba(255, 255, 255, 0.07)',
     gridLineMajor: 'rgba(255, 255, 255, 0.16)',
+    ticketBackground: '#6883996b',
   },
 } as const;
 
