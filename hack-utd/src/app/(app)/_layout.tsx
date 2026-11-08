@@ -28,6 +28,11 @@ export default function AppLayout() {
           options={{ title: 'Fix applied', headerBackVisible: false, gestureEnabled: false }}
         />
 
+        {/* Ask AI belongs to the Client Report, so it follows the same permission. */}
+        <Stack.Protected guard={can(user, 'viewReports')}>
+          <Stack.Screen name="ask" options={{ title: 'Ask AI' }} />
+        </Stack.Protected>
+
         {/* User management is manager-only. Other roles can't navigate here even by URL. */}
         <Stack.Protected guard={can(user, 'manageUsers')}>
           <Stack.Screen name="users/index" options={{ title: 'Team' }} />
