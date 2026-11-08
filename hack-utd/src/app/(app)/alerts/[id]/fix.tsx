@@ -10,7 +10,7 @@ import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAlerts } from '@/features/alerts/alerts-context';
 import { formatMinutes, formatUSD, formatUSDCompact } from '@/features/alerts/format';
-import { draftWorkOrder } from '@/features/alerts/mock-ai';
+import { draftWorkOrder, type AIText } from '@/features/alerts/ai';
 import type { Alert, ScoredFix } from '@/features/alerts/types';
 import { useAuth } from '@/lib/auth/auth-context';
 import { can, type User } from '@/lib/auth/types';
@@ -142,27 +142,40 @@ function FixPlan({ alert, user }: { alert: Alert; user: User }) {
   );
 }
 
-/** Mock-AI drafted instructions for the technician. */
+/** AI-drafted instructions for the technician (template text if the AI is unavailable). */
 function WorkOrder({ alert, fix }: { alert: Alert; fix: ScoredFix }) {
   const theme = useTheme();
-  const [text, setText] = useState<{ fixId: string; body: string } | null>(null);
+  const [result, setResult] = useState<{ fixId: string; text: AIText } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    draftWorkOrder(alert, fix).then((body) => {
-      if (!cancelled) setText({ fixId: fix.id, body });
+    draftWorkOrder(alert, fix).then((text) => {
+      if (!cancelled) setResult({ fixId: fix.id, text });
     });
     return () => {
       cancelled = true;
     };
   }, [alert, fix]);
 
-  return text?.fixId === fix.id ? (
-    <ThemedText style={[styles.mono, { backgroundColor: theme.backgroundElement }]}>
-      {text.body}
-    </ThemedText>
-  ) : (
-    <ActivityIndicator />
+  if (result?.fixId !== fix.id) {
+    return (
+      <View style={styles.writing}>
+        <ActivityIndicator />
+        <ThemedText type="small" themeColor="textSecondary">
+          AI is writing the work order…
+        </ThemedText>
+      </View>
+    );
+  }
+  return (
+    <View style={styles.writing}>
+      <ThemedText type="small" themeColor="textSecondary">
+        {result.text.source === 'ai' ? '✦ Written by AI' : 'AI unavailable · standard template'}
+      </ThemedText>
+      <ThemedText style={[styles.mono, { backgroundColor: theme.backgroundElement }]}>
+        {result.text.text}
+      </ThemedText>
+    </View>
   );
 }
 
@@ -192,6 +205,7 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
   },
   flex: { flex: 1 },
+  writing: { gap: Spacing.two },
   mono: {
     fontFamily: Fonts.mono,
     fontSize: 12,

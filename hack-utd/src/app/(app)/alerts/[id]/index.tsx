@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { SourceChip } from '@/components/alerts/pill';
@@ -9,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { explainAlert, type AIText } from '@/features/alerts/ai';
 import { useAlerts } from '@/features/alerts/alerts-context';
 import { lostAt } from '@/features/alerts/engine';
 import { formatMinutes, formatUSD } from '@/features/alerts/format';
@@ -72,6 +74,7 @@ function AlertDetail({ alert }: { alert: Alert }) {
             {formatUSD(projectedLoss)}
           </ThemedText>
         </View>
+        <AISummary alert={alert} />
       </Card>
 
       {/* FIX + savings */}
@@ -165,7 +168,32 @@ function AlertDetail({ alert }: { alert: Alert }) {
   );
 }
 
+/** Plain-English explanation from the AI (template text while loading / if unavailable). */
+function AISummary({ alert }: { alert: Alert }) {
+  const [result, setResult] = useState<AIText | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    explainAlert(alert).then((r) => {
+      if (!cancelled) setResult(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [alert]);
+
+  return (
+    <View style={styles.ai}>
+      <ThemedText type="small" themeColor="textSecondary">
+        {result === null ? '✦ AI is reading the data…' : result.source === 'ai' ? '✦ AI summary' : 'Summary'}
+      </ThemedText>
+      <ThemedText type="small">{result?.text ?? alert.explanation}</ThemedText>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  ai: { gap: 2, paddingTop: Spacing.one },
   block: { padding: Spacing.four, gap: Spacing.two },
   sentence: { fontSize: 20, lineHeight: 28, fontWeight: 600 },
   money: { borderRadius: Radius.md, padding: Spacing.three, gap: 2 },

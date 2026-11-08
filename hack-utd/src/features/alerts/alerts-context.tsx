@@ -8,7 +8,7 @@ import {
   type PropsWithChildren,
 } from 'react';
 
-import { scanPortfolio, type ScanResult } from './mock-ai';
+import { scanPortfolio, type ScanResult } from './ai';
 import type { Alert, AutoFix, Resolution } from './types';
 
 /** Savings already banked earlier this month (demo baseline). */
