@@ -103,6 +103,6 @@ const styles = StyleSheet.create({
   hero: { padding: Spacing.four, gap: Spacing.one },
   heroValue: { fontSize: 40, lineHeight: 48, fontWeight: 800 },
   heroLoading: { alignSelf: 'flex-start', marginVertical: Spacing.three },
-  section: { gap: Spacing.two },
+  section: { gap: Spacing.three },
   loading: { padding: Spacing.four },
 });
