@@ -121,7 +121,6 @@ export default function DataScreen() {
                 if (demo.active) demo.stop();
                 setPickerOpen(true);
               }}
-              onStartDemo={demo.active ? undefined : startDemo}
               recap={demo.active ? demo.beat.recap : undefined}
             />
           ) : (
@@ -174,7 +173,6 @@ type BuildingDetailsProps = {
   view: View_;
   onChangeView: (view: View_) => void;
   onChangeBuilding: () => void;
-  onStartDemo?: () => void;
   recap?: { label: string; value: string }[];
 };
 
@@ -184,7 +182,6 @@ function BuildingDetails({
   view,
   onChangeView,
   onChangeBuilding,
-  onStartDemo,
   recap,
 }: BuildingDetailsProps) {
   const showSecurity = isDataCenter(building) && !!building.security;
@@ -208,7 +205,6 @@ function BuildingDetails({
         </View>
         <View style={styles.headerButtons}>
           <Button title="Change" variant="secondary" size="sm" onPress={onChangeBuilding} />
-          {onStartDemo && <Button title="▶ Live demo" variant="ghost" size="sm" onPress={onStartDemo} />}
         </View>
       </View>
 

@@ -7,10 +7,19 @@
  */
 import { z } from 'zod';
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-// Groq retires models often. Override with GROQ_MODEL in .env.local if this one disappears.
-// Current list: https://console.groq.com/docs/models
-const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+// Uses Gemini when GEMINI_API_KEY is set in .env.local, otherwise Groq.
+// Both speak the same OpenAI-style chat format, so only the URL/key/model change.
+const USE_GEMINI = !!process.env.GEMINI_API_KEY;
+const PROVIDER = USE_GEMINI ? 'Gemini' : 'Groq';
+const AI_URL = USE_GEMINI
+  ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+  : 'https://api.groq.com/openai/v1/chat/completions';
+// Override with GEMINI_MODEL / GROQ_MODEL in .env.local if a model disappears.
+// Groq list: https://console.groq.com/docs/models
+// gemini-2.5-flash is closed to new API keys; gemini-3.5-flash is fast and matches Ask AI.
+const MODEL = USE_GEMINI
+  ? process.env.GEMINI_MODEL || 'gemini-3.5-flash'
+  : process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 const Facts = z.object({
   building: z.string(),
@@ -50,8 +59,8 @@ const PROMPTS = {
 };
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return Response.json({ error: 'GROQ_API_KEY is not set' }, { status: 500 });
+  const apiKey = USE_GEMINI ? process.env.GEMINI_API_KEY : process.env.GROQ_API_KEY;
+  if (!apiKey) return Response.json({ error: 'GEMINI_API_KEY / GROQ_API_KEY is not set' }, { status: 500 });
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Bad request' }, { status: 400 });
@@ -59,7 +68,7 @@ export async function POST(request: Request) {
 
   let res: Response;
   try {
-    res = await fetch(GROQ_URL, {
+    res = await fetch(AI_URL, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -81,7 +90,7 @@ export async function POST(request: Request) {
 
   if (!res.ok) {
     // Log Groq's reason server-side (shows in the Metro terminal), never the key.
-    console.warn(`[api/ai] Groq ${res.status}:`, (await res.text()).slice(0, 300));
+    console.warn(`[api/ai] ${PROVIDER} ${res.status}:`, (await res.text()).slice(0, 300));
     // 429 = Groq free-tier rate limit. The app falls back to template text.
     return Response.json({ error: `groq_${res.status}` }, { status: res.status === 429 ? 429 : 502 });
   }
