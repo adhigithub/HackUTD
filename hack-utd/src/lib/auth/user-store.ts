@@ -172,14 +172,10 @@ export async function resetToDemoUsers() {
   await seedDemoUsers();
 }
 
-export async function loadSessionUserId() {
-  return AsyncStorage.getItem(SESSION_KEY);
-}
-
-export async function saveSession(userId: string) {
-  await AsyncStorage.setItem(SESSION_KEY, userId);
-}
-
+/**
+ * Sessions are no longer saved (sign-in is required on every launch); this only
+ * removes a session left behind on the device by an older build.
+ */
 export async function clearSession() {
   await AsyncStorage.removeItem(SESSION_KEY);
 }
