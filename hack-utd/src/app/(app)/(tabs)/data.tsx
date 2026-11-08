@@ -17,7 +17,6 @@ import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { Radius, Spacing } from '@/constants/theme';
 import {
-  alertsForBuilding,
   BUILDING_TYPE_LABELS,
   getBuilding,
   isDataCenter,
@@ -25,6 +24,7 @@ import {
   type Building,
 } from '@/data/buildings';
 import { useTheme } from '@/hooks/use-theme';
+import { useLiveDataTab } from '@/features/alerts/data-tab-bridge';
 import { useLiveDemo } from '@/lib/demo/live-demo';
 import { buildTimeline } from '@/lib/incidents/timeline';
 import { NowProvider, useTicker } from '@/lib/time/now';
@@ -53,6 +53,8 @@ export default function DataScreen() {
   // Live clock for the countdown. The demo runs its own, faster one.
   const realNow = useTicker(1000);
   const demo = useLiveDemo();
+  // Same sensor readings and alerts as Home (Supabase, or built-in demo data offline).
+  const { liveBuilding, liveAlerts } = useLiveDataTab();
 
   // Tapping "Data" in the bottom tab bar resets back to the start
   // (no building picked, pop-up closed, demo stopped).
@@ -86,7 +88,7 @@ export default function DataScreen() {
     content = { building: demo.beat.building, alerts: demo.beat.alerts };
   } else {
     const building = buildingId ? getBuilding(buildingId) : undefined;
-    if (building) content = { building, alerts: alertsForBuilding(building.id) };
+    if (building) content = { building: liveBuilding(building), alerts: liveAlerts(building.id) };
   }
 
   return (
