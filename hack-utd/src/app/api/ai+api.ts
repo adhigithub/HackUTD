@@ -1,25 +1,17 @@
 /**
- * POST /api/ai — server-only route that turns engine facts into plain English via Groq.
+ * POST /api/ai — server-only route that turns engine facts into plain English
+ * (alert summaries + work orders) via Google Gemini.
  *
- * Runs on the server (the Metro dev server in development), so GROQ_API_KEY
- * from .env.local never reaches the phone. The numbers all come from
- * engine.ts; the model is told to only reword them, never compute them.
+ * Runs on the server, so GEMINI_API_KEY never reaches the phone. The numbers
+ * all come from engine.ts; the model is told to only reword them, never compute them.
  */
 import { z } from 'zod';
 
-// Uses Gemini when GEMINI_API_KEY is set in .env.local, otherwise Groq.
-// Both speak the same OpenAI-style chat format, so only the URL/key/model change.
-const USE_GEMINI = !!process.env.GEMINI_API_KEY;
-const PROVIDER = USE_GEMINI ? 'Gemini' : 'Groq';
-const AI_URL = USE_GEMINI
-  ? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
-  : 'https://api.groq.com/openai/v1/chat/completions';
-// Override with GEMINI_MODEL / GROQ_MODEL in .env.local if a model disappears.
-// Groq list: https://console.groq.com/docs/models
+// Gemini's OpenAI-compatible chat endpoint.
+const AI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+// Override with GEMINI_MODEL in .env.local if this one disappears (shared with Ask AI).
 // gemini-2.5-flash is closed to new API keys; gemini-3.5-flash is fast and matches Ask AI.
-const MODEL = USE_GEMINI
-  ? process.env.GEMINI_MODEL || 'gemini-3.5-flash'
-  : process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
 const Facts = z.object({
   building: z.string(),
@@ -59,8 +51,8 @@ const PROMPTS = {
 };
 
 export async function POST(request: Request) {
-  const apiKey = USE_GEMINI ? process.env.GEMINI_API_KEY : process.env.GROQ_API_KEY;
-  if (!apiKey) return Response.json({ error: 'GEMINI_API_KEY / GROQ_API_KEY is not set' }, { status: 500 });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return Response.json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 });
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: 'Bad request' }, { status: 400 });
@@ -74,8 +66,8 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: MODEL,
         temperature: 0.3, // steadier wording
-        // gpt-oss is a reasoning model: keep thinking short, and leave room for
-        // the answer (reasoning tokens count toward this limit).
+        // Keep the model's thinking short, and leave room for the answer
+        // (thinking tokens count toward this limit).
         reasoning_effort: 'low',
         max_tokens: 2000,
         messages: [
@@ -89,10 +81,10 @@ export async function POST(request: Request) {
   }
 
   if (!res.ok) {
-    // Log Groq's reason server-side (shows in the Metro terminal), never the key.
-    console.warn(`[api/ai] ${PROVIDER} ${res.status}:`, (await res.text()).slice(0, 300));
-    // 429 = Groq free-tier rate limit. The app falls back to template text.
-    return Response.json({ error: `groq_${res.status}` }, { status: res.status === 429 ? 429 : 502 });
+    // Log Gemini's reason server-side (shows in the Metro terminal), never the key.
+    console.warn(`[api/ai] Gemini ${res.status}:`, (await res.text()).slice(0, 300));
+    // 429 = rate limit. The app falls back to template text.
+    return Response.json({ error: `gemini_${res.status}` }, { status: res.status === 429 ? 429 : 502 });
   }
 
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };

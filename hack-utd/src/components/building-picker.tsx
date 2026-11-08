@@ -7,6 +7,7 @@ import {
   BUILDING_TYPE_LABELS,
   BUILDINGS,
   formatMoney,
+  type Alert,
 } from '@/data/buildings';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -15,10 +16,18 @@ type BuildingPickerProps = {
   selectedId: string | null;
   onSelect: (buildingId: string) => void;
   onClose: () => void;
+  /** Where each building's open alerts come from (live alerts; built-in list by default). */
+  alertsFor?: (buildingId: string) => Alert[];
 };
 
 /** The "Pick a building" pop-up shown when you open the Data tab. */
-export function BuildingPicker({ visible, selectedId, onSelect, onClose }: BuildingPickerProps) {
+export function BuildingPicker({
+  visible,
+  selectedId,
+  onSelect,
+  onClose,
+  alertsFor = alertsForBuilding,
+}: BuildingPickerProps) {
   const theme = useTheme();
 
   return (
@@ -43,7 +52,7 @@ export function BuildingPicker({ visible, selectedId, onSelect, onClose }: Build
 
           {BUILDINGS.map((building) => {
             const selected = building.id === selectedId;
-            const alerts = alertsForBuilding(building.id);
+            const alerts = alertsFor(building.id);
             const atRisk = alerts.reduce((sum, a) => sum + a.costAtRisk, 0);
 
             return (
