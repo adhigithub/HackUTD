@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useNavigation } from 'expo-router';
+import type { BottomTabNavigationProp } from 'expo-router/js-tabs';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AlertCard } from '@/components/building/alert-card';
@@ -23,19 +25,31 @@ type View_ = 'overview' | 'security';
 
 /**
  * Data tab.
- * 1. Opens with the "Pick a building" pop-up.
+ * 1. Shows a "Pick a building" button that opens the pop-up.
  * 2. After picking, shows that building's live readings and alerts.
  * 3. Data centers also get a Security view.
  */
 export default function DataScreen() {
   // Which building is picked (null = none yet).
   const [buildingId, setBuildingId] = useState<string | null>(null);
-  // Is the pop-up showing? Starts open so it appears when you open the tab.
-  const [pickerOpen, setPickerOpen] = useState(true);
+  // Is the pop-up showing? Starts closed — the user opens it with the button.
+  const [pickerOpen, setPickerOpen] = useState(false);
   // Which view is showing for the building.
   const [view, setView] = useState<View_>('overview');
 
   const building = buildingId ? getBuilding(buildingId) : undefined;
+
+  // Tapping "Data" in the bottom tab bar resets back to the start
+  // (no building picked, pop-up closed).
+  const navigation = useNavigation<BottomTabNavigationProp<Record<string, undefined>>>();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', () => {
+      setBuildingId(null);
+      setPickerOpen(false);
+      setView('overview');
+    });
+    return unsubscribe; // stop listening when the screen goes away
+  }, [navigation]);
 
   function handleSelect(id: string) {
     setBuildingId(id);
@@ -68,7 +82,7 @@ export default function DataScreen() {
   );
 }
 
-// ─── Shown if the pop-up is closed without picking anything ─────────────────
+// ─── Shown before any building is picked ────────────────────────────────────
 
 function NoBuildingYet({ onPick }: { onPick: () => void }) {
   return (
