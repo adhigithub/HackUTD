@@ -145,6 +145,17 @@ export async function updateUser(id: string, update: UserUpdate): Promise<User> 
   return toPublic(next);
 }
 
+/**
+ * Sets a new password for the account with this email (the "Forgot password?" flow).
+ * Demo-grade: with no email server there is no reset link, so this resets directly.
+ * A real backend would email a one-time link and only change the password from it.
+ */
+export async function resetPassword(email: string, newPassword: string): Promise<void> {
+  const user = (await readAll()).find((u) => u.email === normalizeEmail(email));
+  if (!user) throw new AuthError('No account found with that email.');
+  await updateUser(user.id, { password: newPassword });
+}
+
 export async function deleteUser(id: string) {
   const users = await readAll();
   const target = users.find((u) => u.id === id);

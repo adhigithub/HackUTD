@@ -74,6 +74,15 @@ export default function SignInScreen() {
           returnKeyType="go"
           onSubmitEditing={() => submit()}
         />
+        <Link
+          href={{ pathname: '/forgot-password', params: email.trim() ? { email: email.trim() } : {} }}
+          asChild>
+          <Pressable hitSlop={8} style={styles.forgot} accessibilityRole="link">
+            <ThemedText type="smallBold" style={{ color: theme.primary }}>
+              Forgot password?
+            </ThemedText>
+          </Pressable>
+        </Link>
         <Button title="Sign in" loading={submitting} onPress={() => submit()} />
         <Link href="/sign-up" asChild>
           <Button title="Create an account" variant="ghost" />
@@ -127,6 +136,8 @@ const styles = StyleSheet.create({
   },
   center: { textAlign: 'center' },
   form: { gap: Spacing.three, padding: Spacing.four },
+  // Sits right under the password field, like most sign-in pages.
+  forgot: { alignSelf: 'flex-end', marginTop: -Spacing.two },
   demo: { gap: Spacing.two },
   demoRow: {
     flexDirection: 'row',
